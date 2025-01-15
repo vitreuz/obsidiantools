@@ -457,8 +457,13 @@ class Vault:
              ]:
         self._canvas_graph_detail_index = value
 
-    def connect(self, *, show_nested_tags: bool = False,
-                attachments=False):
+    def connect(
+        self,
+        *,
+        show_nested_tags: bool = False,
+        attachments=False,
+        front_matter: bool = False,
+    ):
         """connect your notes together by representing the vault as a
         Networkx graph object, G.
 
@@ -479,6 +484,9 @@ class Vault:
                 To include media files in the graph, set this option to True.
                 This will lead to the inclusion of media files' in the
                 backlinks_index.
+            front_matter (Boolean): Defaults to False.  Set to True to graph
+                links in the front matter of notes.
+
         """
         if not self._is_connected:
             self._attachments = attachments
@@ -498,8 +506,11 @@ class Vault:
             # loop through md files:
             for f, relpath in self._md_file_index.items():
                 self._connect_update_based_on_new_relpath(
-                    relpath, note=f,
-                    show_nested_tags=show_nested_tags)
+                    relpath,
+                    note=f,
+                    show_nested_tags=show_nested_tags,
+                    connect_front_matter=front_matter,
+                )
 
             # canvas content:
             # loop through canvas files:
@@ -534,9 +545,14 @@ class Vault:
 
         return self  # fluent
 
-    def _connect_update_based_on_new_relpath(self, relpath: Path, *,
-                                             note: str,
-                                             show_nested_tags: bool):
+    def _connect_update_based_on_new_relpath(
+        self,
+        relpath: Path,
+        *,
+        note: str,
+        show_nested_tags: bool,
+        connect_front_matter: bool = False,
+    ):
         """Individual file read & associated attrs update for the
         connect method."""
         exclude_canvas = not self._attachments
@@ -545,8 +561,14 @@ class Vault:
         front_matter, content = _get_md_front_matter_and_content(
             self._dirpath / relpath)
         html = _get_html_from_md_content(content)
-        src_txt = get_source_text_from_html(
-            html, remove_code=True)
+
+        src_txt: str
+        if connect_front_matter:
+            with open(self._dirpath / relpath, encoding='utf-8') as f:
+                src_txt = f.read()
+        else:
+            src_txt = get_source_text_from_html(
+                html, remove_code=True)
 
         # info from core text:
         self._md_links_index[note] = (

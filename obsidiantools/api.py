@@ -131,6 +131,9 @@ class Vault:
             canvas_content_index
             canvas_graph_detail_index
         """
+        if not isinstance(dirpath, Path):
+            raise TypeError("Specify a pathlib.Path for the dirpath argument (not other types like strings)")
+
         # args:
         self._dirpath = dirpath
         self._attachments = None  # connect()

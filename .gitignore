@@ -138,4 +138,5 @@ dmypy.json
 .vscode/settings.json
 notebooks/
 .gitignore
-.gitignore
+junit.xml
+codecov.yml
